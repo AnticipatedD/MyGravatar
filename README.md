@@ -62,6 +62,17 @@ npx @redocly/cli preview-docs openapi.yaml
 npx swagger-ui-watcher openapi.yaml
 ```
 ---
+.gitignore
+
+.DS_Store
+*.log
+.env
+.idea/
+.vscode/
+node_modules/
+dist/
+
+---
 ## License
 MIT License – see LICENSE
 
