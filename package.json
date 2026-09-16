@@ -1,0 +1,29 @@
+{
+  "name": "MyGravatar",
+  "version": "1.0.0",
+  "description": "Enterprise-Grade Automated orchestration (MyGravatar Portfolio Project)",
+  "main": "strict_prompt_builder.js",
+  "scripts": {
+    "lint": "eslint strict_prompt_builder.js",
+    "format": "prettier --write strict_prompt_builder.js",
+    "test": "echo \"No Node test suite yet – Python pytest is the primary test runner\" && exit 0",
+    "start": "echo \"This is a Python-first project. Run: python vane_space_init.py\""
+  },
+  "keywords": [
+    "telemetry",
+    "prompt-grounding",
+    "multi-gate-validation",
+    "demonstration",
+    "portfolio"
+  ],
+  "author": "MD ABUL HOSSAIN",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5"
+  }
+}
