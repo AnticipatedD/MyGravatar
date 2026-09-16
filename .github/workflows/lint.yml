@@ -1,0 +1,24 @@
+name: Enterprise Infrastructure CI Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  validate-environment:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code Repository Footprint
+      uses: actions/checkout@v4
+
+    - name: Run ShellCheck Validation Audit
+      uses: ludeeus/action-shellcheck@master
+      with:
+        ignore_paths: node_modules
+        
+    - name: Execute Automated Pre-flight Dry-Run Test
+      run: |
+        chmod +x *.sh
+        ./check-system-enhanced.sh
