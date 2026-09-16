@@ -1,0 +1,39 @@
+# vLLM Semantic Router System Intelligence Specifications
+router:
+  name: lemonade-intent-router
+  frontend_api: openai
+  backend_strategy: cost_and_capability # Balance inference footprints dynamically
+
+# Token, Latency, and Cost Tracking telemetry setup
+telemetry:
+  enabled: true
+  metrics_backend: prometheus
+  logging:
+    level: info
+    include_prompt_signals: true
+
+# Classifier Layer definition
+signal_processor:
+  classifier:
+    model_type: text
+    local_path: /models/ModernBERT-base-router # Fast Rust-based embedding classifier
+    threshold: 0.75
+
+# Defined Agent Routing Clusters
+routes:
+  - name: code_generation_route
+    query_modality: text
+    threshold: 0.78
+    aggregation_method: max
+    candidates:
+      - "write an optimized implementation python script"
+      - "compile standard HIP source code modules"
+      - "refactor execution routines for AMD Instinct accelerators"
+    target_cluster: fp8_high_throughput_pool
+
+  - name: direct_fallback_route
+    query_modality: text
+    threshold: 0.00 # Catch-all policy
+    candidates:
+      - "*"
+    target_cluster: bf16_precision_pool
