@@ -1,0 +1,39 @@
+name: Test Suite & Code Quality Validation
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  validate-repository:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out repository code targets
+      uses: actions/checkout@v4
+
+    - name: Install Shellcheck Engine
+      run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+    - name: Run Shellcheck against platform script handles
+      run: |
+        shellcheck deploy-vllm-inference.sh check-system-enhanced.sh install-kubernetes.sh install-amd-gpu-operator.sh run-web-demo.sh tests/test_scripts.sh
+
+    - name: Set up Python Runtime environment
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install pinned project dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Execute code cleanliness validations (Linter checks)
+      run: ruff check lemonade_router.py chatbot_backend.py interactive_gui.py router_pipeline.py
+
+    - name: Run test suite metrics tracking coverage threshold rules
+      run: |
+        pytest --cov=. --cov-fail-under=50 -v tests/
