@@ -1,0 +1,13 @@
+- name: Verify CLI Installation
+        run: |
+          echo "Checking MyCLI version..."
+          mycli --version
+
+`act -j test`
+
+`actions/cache`
+- name: Cache MyCLI
+        uses: actions/cache@v4
+        with:
+          path: ~/.mycli
+          key: mycli-${{ runner.os }}-${{ inputs.version }}
