@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-qwen3-coder
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vllm-backend
+  template:
+    metadata:
+      labels:
+        app: vllm-backend
+    spec:
+      containers:
+      - name: vllm-container
+        image: rocm/vllm:rocm10.0.0_ubuntu24.04_vllm_0.27.0
+        command: ["vllm", "serve", "Qwen/Qwen3-Coder-30B-A3B-Instruct", "--host", "0.0.0.0", "--port", "8000", "--trust-remote-code", "--chat-template", "tool_use"]
+        ports:
+        - containerPort: 8000
+          name: api-port
+        env:
+        - name: HUGGING_FACE_HUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: hf-token-secret
+              key: token
+        securityContext:
+          capabilities:
+            add: ["SYS_PTRACE", "CAP_SYS_ADMIN"]
+          privileged: true
+        resources:
+          limits:
+            ://amd.com: "2"
+        volumeMounts:
+        - name: storage-volume
+          mountPath: /root/.cache/huggingface
+      volumes:
+      - name: storage-volume
+        persistentVolumeClaim:
+          claimName: vllm-model-pvc
