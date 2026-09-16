@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lemonade Router Builder Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #38bdf8;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --success: #22c55e;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            color: var(--accent-color);
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            margin: 5px 0 0 0;
+            font-size: 14px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 18px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-color);
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        textarea {
+            resize: vertical;
+            height: 100px;
+        }
+
+        .range-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            font-size: 14px;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .log-container {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 15px;
+            font-family: "Courier New", Courier, monospace;
+            height: 350px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-size: 13px;
+            color: #3ade84;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            background-color: rgba(34, 197, 94, 0.2);
+            color: var(--success);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Lemonade Router Builder</h1>
+        <p class="subtitle">Engine: Qwen3-Coder-30B-A3B-Instruct-GGUF</p>
+    </header>
+
+    <div class="grid">
+        <!-- Control Panel -->
+        <div class="card">
+            <h2>Router Settings</h2>
+            <form id="routerForm">
+                <div class="form-group">
+                    <label>Active Routing Profile</label>
+                    <div class="status-badge">● Active Tool Calling Engine</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="temperature">Model Temperature</label>
+                    <div class="range-group">
+                        <input type="range" id="temperature" min="0" max="1" step="0.1" value="0.7">
+                        <span id="tempValue">0.7</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="prompt">User Instruction / Intent</label>
+                    <textarea id="prompt" placeholder="e.g., Everything looks clean, please trigger a deployment to production right now."></textarea>
+                </div>
+
+                <button type="submit" id="submitBtn">Dispatch Intent Route</button>
+            </form>
+        </div>
+
+        <!-- Terminal Output Window -->
+        <div class="card">
+            <h2>Agent Execution & Routing Logs</h2>
+            <div id="logConsole" class="log-container">[System Ready] Awaiting routing instruction dispatch...</div>
+        </div>
+    </div>
+</div>
+
+<!-- Link the companion Javascript functionality -->
+<script src="router_agent.js"></script>
+</body>
+  </html>
