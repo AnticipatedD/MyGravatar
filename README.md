@@ -2,16 +2,27 @@
 
 Personalized, cleaned, and risk-mitigated version of the **Gravatar Public API** (OpenAPI 3.1.0).
 
-**Owner**: [MD ABUL HOSSAIN](https://github.com/AnticipatedD) (`mdabul1008`)
+<div align="center">
+  
+![AMD](https://img.shields.io/badge/AMD-Skills-ED1C24?logo=amd&logoColor=white)
+![ROCm](https://img.shields.io/badge/ROCm-Enabled-green)
+![Ryzen AI](https://img.shields.io/badge/Ryzen_AI-Ready-1F6FEB)
+![Agent Skills](https://img.shields.io/badge/Agent_Skills-Standard-7B2D8E)
+[![Cursor](https://img.shields.io/badge/Cursor-Compatible-000000?logo=cursor&logoColor=white)](https://cursor.com)
+[![Claude Code](https://img.shields.io/badge/Claude_Code-Compatible-F07535?logo=claude&logoColor=white)](https://www.anthropic.com/claude-code)
+[![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-Compatible-4285F4?logo=googlegemini&logoColor=white)](https://ai.google.dev/gemini-api/docs)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+**Owner**: [MD ABUL HOSSAIN](https://github.com/AnticipatedD/mdabul1008)
 
 ---
 
 ### Official Profiles
-- **Gravatar**: [gravatar.com/mdabul1008](https://gravatar.com/mdabul1008)
-- **GitHub**: [github.com/AnticipatedD](https://github.com/AnticipatedD)
-- **X (Twitter)**: [x.com/harigov63](https://x.com/harigov63)
-- **LinkedIn**: [linkedin.com/in/mdabul1008](https://www.linkedin.com/in/mdabul1008)
-- **Contact**: [anticipatedd.github.io/mdhossain](https://anticipatedd.github.io/mdhossain)
+- **Gravatar**: [MyGravatar](https://gravatar.com/mdabul1008)
+- **GitHub**: [AnticipatedD](https://github.com/AnticipatedD)
+- **X (Twitter)**: [MD ABUL HOSSAIN](https://x.com/@harigov63)
+- **LinkedIn**: [MD ABUL HOSSAIN](https://www.linkedin.com/in/mdabul1008)
+- **Contact**: [AnticipatedD](https://anticipatedd.github.io/mdhossain)
 
 ---
 
