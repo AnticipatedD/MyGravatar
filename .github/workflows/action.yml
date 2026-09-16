@@ -1,0 +1,13 @@
+name: "Setup Environment"
+description: "Sets up Node.js and installs dependencies"
+inputs:
+  node-version:
+    description: "Node.js version"
+    required: true
+  registry-url:
+    description: "NPM Registry URL"
+    required: false
+    default: "https://registry.npmjs.org/"
+runs:
+  using: "node16"
+  main: "index.js"
