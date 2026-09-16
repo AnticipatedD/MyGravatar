@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # WORKLOAD A: Native Precision Pool (BF16 + FP8 KV Cache) on GPUs 0 and 1
+  # ---------------------------------------------------------------------------
+  vllm-bf16-node:
+    image: rocm/vllm:rocm10.0.0_ubuntu24.04_vllm_0.27.0
+    container_name: lemonade-mi300x-bf16-server
+    network_mode: host
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+      - ROCR_VISIBLE_DEVICES=0,1
+      - PYTORCH_TUNABLEOP_ENABLED=1
+      - HIP_FORCE_DEV_KERNARG=1
+      - SAFETENSORS_FAST_GPU=1
+      - TORCH_BLAS_PREFER_HIPBLASLT=1
+      - NCCL_MIN_NCHANNELS=112
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+      - /dev/mem:/dev/mem
+    cap_add:
+      - SYS_PTRACE
+      - CAP_SYS_ADMIN
+    group_add:
+      - video
+      - render
+    security_opt:
+      - seccomp:unconfined
+    ipc: host
+    shm_size: '64gb'
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
+    command: >
+      vllm serve Qwen/Qwen3-Coder-30B-A3B-Instruct
+      --port 8001
+      --dtype bfloat16
+      --kv-cache-dtype fp8
+      --gpu-memory-utilization 0.92
+      --max-model-len 16384
+      --block-size 16
+      --enable-chunked-prefill
+      --trust-remote-code
+      --chat-template tool_use
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # WORKLOAD B: Quantized High-Throughput Pool (PTPC-FP8 GEMM) on GPUs 2 and 3
+  # ---------------------------------------------------------------------------
+  vllm-fp8-node:
+    image: rocm/vllm:rocm10.0.0_ubuntu24.04_vllm_0.27.0
+    container_name: lemonade-mi300x-fp8-server
+    network_mode: host
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+      - ROCR_VISIBLE_DEVICES=2,3
+      - TUNE_FP8=1
+      - HIP_FORCE_DEV_KERNARG=1
+      - SAFETENSORS_FAST_GPU=1
+      - TORCH_BLAS_PREFER_HIPBLASLT=1
+      - NCCL_MIN_NCHANNELS=112
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+      - /dev/mem:/dev/mem
+    cap_add:
+      - SYS_PTRACE
+      - CAP_SYS_ADMIN
+    group_add:
+      - video
+      - render
+    security_opt:
+      - seccomp:unconfined
+    ipc: host
+    shm_size: '64gb'
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
+    command: >
+      vllm serve Qwen/Qwen3-Coder-30B-A3B-Instruct
+      --port 8002
+      --quantization ptpc_fp8
+      --gpu-memory-utilization 0.95
+      --max-model-len 16384
+      --trust-remote-code
+      --chat-template tool_use
+    restart: unless-stopped
