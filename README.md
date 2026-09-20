@@ -1,114 +1,26 @@
-# [MyGravatar](https://gravatar.com/mdabul1008)
+# AMD ROCm / Kubernetes Inference Router & Chatbot
 
-Personalized, cleaned, and risk-mitigated version of the **Gravatar Public API** (OpenAPI 3.1.0).
+## Overview
+An enterprise-grade reference toolkit for AMD ROCm GPU environment verification, Kubernetes vLLM deployment orchestration, and intelligent tool-routing for LLM backends.
 
-<div align="center">
-  
-![AMD](https://img.shields.io/badge/AMD-Skills-ED1C24?logo=amd&logoColor=white)
-![ROCm](https://img.shields.io/badge/ROCm-Enabled-green)
-![Ryzen AI](https://img.shields.io/badge/Ryzen_AI-Ready-1F6FEB)
-![Agent Skills](https://img.shields.io/badge/Agent_Skills-Standard-7B2D8E)
-[![Cursor](https://img.shields.io/badge/Cursor-Compatible-000000?logo=cursor&logoColor=white)](https://cursor.com)
-[![Claude Code](https://img.shields.io/badge/Claude_Code-Compatible-F07535?logo=claude&logoColor=white)](https://www.anthropic.com/claude-code)
-[![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-Compatible-4285F4?logo=googlegemini&logoColor=white)](https://ai.google.dev/gemini-api/docs)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-
-**Owner**: [MD ABUL HOSSAIN](https://github.com/AnticipatedD/mdabul1008)
-
----
-
-### Official Profiles
-- **Gravatar**: [MyGravatar](https://gravatar.com/mdabul1008)
-- **GitHub**: [AnticipatedD](https://github.com/AnticipatedD)
-- **X (Twitter)**: [MD ABUL HOSSAIN](https://x.com/@harigov63)
-- **LinkedIn**: [MD ABUL HOSSAIN](https://www.linkedin.com/in/mdabul1008)
-- **Contact**: [AnticipatedD](https://anticipatedd.github.io/mdhossain)
-
----
-
-## About This Repository
-
-This repository contains a fully expanded, cleaned, and personalized version of Gravatar’s official Public API specification.
-
-### What was done:
-- Removed all generic / public example URLs
-- Replaced them with the owner’s real profile links
-- Tightened descriptions and removed redundancy
-- Clearly documented authentication requirements, rate limits, and experimental endpoints
-- Structured the project for easy use with Swagger UI, Redoc, Postman, etc.
-
----
-
-## Files
-
-| File | Description |
-|------|-------------|
-| `openapi.yaml` | Complete OpenAPI 3.1.0 specification |
-| `README.md` | This file |
-| `LICENSE` | MIT License |
-| `.gitignore` | Standard ignores |
-
----
-
-## Key Risks & Notes
-
-| Risk | Status | Notes |
-|------|--------|-------|
-| Authentication required | Documented | Most useful endpoints need Bearer token or WordPress OAuth |
-| Rate Limiting | Documented | Respect `X-RateLimit-*` headers |
-| Experimental endpoints | Clearly tagged | `/profiles/search/by-verified-account` and `/verified-accounts/services` may change |
-| Privacy | Highlighted | Full contact info, gallery, payments etc. only available when authenticated |
-
----
+## Architecture & Core Modules
+- **`lemonade_router.py`**: Intelligent tool-routing engine for LLM task dispatch.
+- **`manage_infra.py`**: Infrastructure orchestration script verifying ROCm drivers and applying Kubernetes manifests.
+- **`chatbot_backend.py`**: Core backend interfacing with local or remote vLLM endpoints.
+- **`interactive_cli_chat.py`**: Interactive CLI wrapper for chatbot interactions.
 
 ## Quick Start
-
-### View the documentation locally
-
 ```bash
-# Using Redocly (recommended)
-npx @redocly/cli preview-docs openapi.yaml
+# Clone and install dependencies
+pip install -r requirements-lock.txt
 
-# Or using Swagger UI
-npx swagger-ui-watcher openapi.yaml
-```
----
-.gitignore
+# Run pytest unit tests with coverage
+pytest --cov=. --cov-fail-under=50
 
-.DS_Store
-*.log
-.env
-.idea/
-.vscode/
-node_modules/
-dist/
-
----
-## License
-MIT License – see LICENSE
-
-#### `LICENSE`
-
-```text
-MIT License
-
-Copyright (c) 2026 MD ABUL HOSSAIN (AnticipatedD). All Rights Reserved. 
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
+cp .env.example .env
+​cat << 'EOF' > .env.example
+ROCM_API_KEY=your_rocm_api_key_here
+ROCM_ENGINE_URL=http://localhost:8000/v1
+ROCM_MODEL_NAME=amd/vLLM-ROCm-Inference
+LOG_LEVEL=INFO
+ENV=development
