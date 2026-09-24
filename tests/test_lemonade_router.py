@@ -47,3 +47,33 @@ def test_route_and_execute_tool_path(mock_openai_class, mock_openai_response):
     assert isinstance(output, dict)
     assert output["status"] == "success"
     assert "SUCCESS_hip_kernel_matrix" in output["result"]
+
+@patch('lemonade_router.OpenAI')
+def test_route_and_execute_validation_empty_prompt(mock_openai_class, setup_test_env):
+    """Asserts that sending an empty instruction prompt string triggers input error status."""
+    router = LemonadeRouterBuilder()
+    
+    # Test completely empty string mapping
+    output_empty = router.route_and_execute(user_prompt="")
+    assert output_empty["status"] == "error"
+    assert "[Input Validation Mismatch]" in output_empty["result"]
+    
+    # Test excess blank spacing layout strings
+    output_whitespace = router.route_and_execute(user_prompt="   ")
+    assert output_whitespace["status"] == "error"
+    assert "[Input Validation Mismatch]" in output_whitespace["result"]
+
+@patch('lemonade_router.OpenAI')
+def test_route_and_execute_validation_temperature_out_of_bounds(mock_openai_class, setup_test_env):
+    """Asserts that temperature numbers falling outside 0.0-2.0 trigger explicit rejection responses."""
+    router = LemonadeRouterBuilder()
+    
+    # Test negative temperature constraint breaches
+    output_negative = router.route_and_execute(user_prompt="Test command", temperature=-0.5)
+    assert output_negative["status"] == "error"
+    assert "[Input Validation Mismatch]" in output_negative["result"]
+    
+    # Test excess ceiling value overflows
+    output_overflow = router.route_and_execute(user_prompt="Test command", temperature=2.5)
+    assert output_overflow["status"] == "error"
+    assert "[Input Validation Mismatch]" in output_overflow["result"]
