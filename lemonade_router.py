@@ -2,10 +2,31 @@ import os
 import json
 import logging
 from typing import Callable, Dict, List, Any, Optional
+from pydantic import BaseModel, Field, field_validator
 from openai import OpenAI
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("LemonadeRouter")
+
+# Pydantic schema enforcing input layer validation at the API boundary
+class RouteRequest(BaseModel):
+    user_prompt: str = Field(..., description="The structural raw instruction prompt string to route.")
+    temperature: float = Field(default=0.7, description="Controls generation randomness parameters.")
+
+    @field_validator('user_prompt')
+    @classmethod
+    def validate_prompt_not_empty(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("Input instruction prompt cannot be empty or solely whitespace.")
+        return value
+
+    @field_validator('temperature')
+    @classmethod
+    def validate_temperature_range(cls, value: float) -> float:
+        if not (0.0 <= value <= 2.0):
+            raise ValueError("Temperature parameter must fall between the values of 0.0 and 2.0.")
+        return value
+
 
 class LemonadeRouterBuilder:
     def __init__(self, base_url: Optional[str] = None):
@@ -39,12 +60,15 @@ class LemonadeRouterBuilder:
 
     def route_and_execute(self, user_prompt: str, temperature: float = 0.7) -> dict:
         """Dynamically evaluates instruction bounds to route target capabilities handles."""
-        if not user_prompt.strip():
-            return {"status": "error", "result": "Input instruction cannot be empty."}
+        # Enforce validation schemas on operational input parameters
+        try:
+            validated_payload = RouteRequest(user_prompt=user_prompt, temperature=temperature)
+        except ValueError as validation_error:
+            return {"status": "error", "result": f"[Input Validation Mismatch] {str(validation_error)}"}
 
         messages = [
             {"role": "system", "content": "You are a precise enterprise router agent. Evaluate instruction strings and route targets."},
-            {"role": "user", "content": user_prompt}
+            {"role": "user", "content": validated_payload.user_prompt}
         ]
 
         try:
@@ -53,7 +77,7 @@ class LemonadeRouterBuilder:
                 messages=messages,
                 tools=self.tools if self.tools else None,
                 tool_choice="auto" if self.tools else None,
-                temperature=temperature
+                temperature=validated_payload.temperature
             )
             response_message = response.choices[0].message
             
