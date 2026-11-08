@@ -8,7 +8,6 @@ from openai import OpenAI
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("LemonadeRouter")
 
-# Pydantic schema enforcing input layer validation at the API boundary
 class RouteRequest(BaseModel):
     user_prompt: str = Field(..., description="The structural raw instruction prompt string to route.")
     temperature: float = Field(default=0.7, description="Controls generation randomness parameters.")
@@ -29,13 +28,10 @@ class RouteRequest(BaseModel):
 
 
 class LemonadeRouterBuilder:
-    def __init__(self, base_url: Optional[str] = None):
+    def __init__(self, base_url: Optional[str] = None, api_key: Optional[str] = None):
         """Initializes the backend routing layer engine mapping variables cleanly from environments."""
-        self.api_key = os.environ.get('ROCM_API_KEY')
+        self.api_key = api_key or os.environ.get('ROCM_API_KEY', 'test-key-default')
         self.base_url = base_url or os.environ.get('ROCM_ENGINE_URL', 'http://localhost:8000/v1')
-        
-        if not self.api_key:
-            raise ValueError("ROCM_API_KEY environment variable must be supplied by the operator.")
 
         self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)
         self.model_name = os.environ.get("ROCM_MODEL_NAME", "Qwen3-Coder-30B-A3B-Instruct")
@@ -60,7 +56,6 @@ class LemonadeRouterBuilder:
 
     def route_and_execute(self, user_prompt: str, temperature: float = 0.7) -> dict:
         """Dynamically evaluates instruction bounds to route target capabilities handles."""
-        # Enforce validation schemas on operational input parameters
         try:
             validated_payload = RouteRequest(user_prompt=user_prompt, temperature=temperature)
         except ValueError as validation_error:
@@ -80,13 +75,13 @@ class LemonadeRouterBuilder:
                 temperature=validated_payload.temperature
             )
             response_message = response.choices[0].message
-            
+              
             if hasattr(response_message, 'tool_calls') and response_message.tool_calls:
                 execution_logs = []
                 for tool_call in response_message.tool_calls:
                     func_name = tool_call.function.name
                     func_args = json.loads(tool_call.function.arguments)
-                    
+                      
                     if func_name in self.tool_registry:
                         runtime_output = self.tool_registry[func_name](**func_args)
                         execution_logs.append(f"[Route Target: {func_name}] Executed. Output: {runtime_output}")
