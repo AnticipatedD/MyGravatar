@@ -14,9 +14,9 @@ def verify_rocm_environment() -> bool:
     if not smi_path:
         logger.warning("rocm-smi execution binary not found in standard system PATH.")
         return False
-    
+      
     try:
-        result = subprocess.run([smi_path, "--showshowdriverversion"], capture_output=True, text=True, check=True)
+        result = subprocess.run([smi_path, "--showdriverversion"], capture_output=True, text=True, check=True)
         logger.info(f"ROCm SMI check verified driver: {result.stdout.strip()}")
         return True
     except subprocess.SubprocessError as e:
@@ -29,7 +29,7 @@ def check_kubernetes_cluster() -> bool:
     if not kubectl_path:
         logger.error("kubectl CLI binary missing. Aborting operation steps.")
         return False
-        
+          
     try:
         subprocess.run([kubectl_path, "cluster-info"], capture_output=True, check=True)
         logger.info("Successfully connected to operational Kubernetes cluster target framework.")
@@ -38,12 +38,25 @@ def check_kubernetes_cluster() -> bool:
         logger.error("Unable to reach the Kubernetes cluster API server orchestration layers.")
         return False
 
-def deploy_manifests(manifest_paths: List[str]) -> bool:
-    """Applies authentic Kubernetes manifest configurations directly to the system cluster."""
+def deploy_manifests(manifest_paths: List[str], dry_run: bool = False) -> bool:
+    """Applies authentic Kubernetes manifest configurations directly to the system cluster with a dry-run validation gate."""
     if not check_kubernetes_cluster():
         return False
-        
+          
     for path in manifest_paths:
+        logger.info(f"Validating manifest via client dry-run: {path}")
+        try:
+            dry_run_cmd = ["kubectl", "apply", "--dry-run=client", "-f", path]
+            subprocess.run(dry_run_cmd, check=True, capture_output=True, text=True)
+            logger.info(f"Dry-run validation passed for manifest: {path}")
+        except subprocess.SubprocessError as e:
+            logger.error(f"Dry-run validation failed on file path '{path}': {e.stderr if hasattr(e, 'stderr') else str(e)}")
+            return False
+
+        if dry_run:
+            logger.info(f"Dry-run mode enabled. Skipping actual apply for: {path}")
+            continue
+
         logger.info(f"Applying operational manifest payload: {path}")
         try:
             subprocess.run(["kubectl", "apply", "-f", path], check=True)
