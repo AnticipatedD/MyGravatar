@@ -1,69 +1,133 @@
-import subprocess
 import shutil
-import logging
+import subprocess
 import sys
-from typing import List
+from collections.abc import Sequence
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger("InfraManager")
+from logging_config import get_logger
+
+logger = get_logger(__name__)
+
 
 def verify_rocm_environment() -> bool:
-    """Verifies if local hardware contains functional AMD ROCm paths."""
-    logger.info("Checking for local AMD GPU hardware interfaces...")
+    """Check whether AMD ROCm tooling is available."""
+
     smi_path = shutil.which("rocm-smi")
+
     if not smi_path:
-        logger.warning("rocm-smi execution binary not found in standard system PATH.")
+        logger.warning("rocm-smi was not found in PATH")
         return False
-      
+
     try:
-        result = subprocess.run([smi_path, "--showdriverversion"], capture_output=True, text=True, check=True)
-        logger.info(f"ROCm SMI check verified driver: {result.stdout.strip()}")
+        result = subprocess.run(
+            [smi_path, "--showdriverversion"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=30,
+        )
+
+        logger.info(
+            "ROCm environment verified",
+            extra={"driver_information": result.stdout.strip()},
+        )
         return True
-    except subprocess.SubprocessError as e:
-        logger.error(f"Failed to query system properties via rocm-smi: {str(e)}")
+
+    except (subprocess.SubprocessError, OSError):
+        logger.exception("ROCm verification failed")
         return False
+
 
 def check_kubernetes_cluster() -> bool:
-    """Verifies connection status to target Kubernetes API layer environments."""
+    """Verify access to the configured Kubernetes cluster."""
+
     kubectl_path = shutil.which("kubectl")
+
     if not kubectl_path:
-        logger.error("kubectl CLI binary missing. Aborting operation steps.")
-        return False
-          
-    try:
-        subprocess.run([kubectl_path, "cluster-info"], capture_output=True, check=True)
-        logger.info("Successfully connected to operational Kubernetes cluster target framework.")
-        return True
-    except subprocess.SubprocessError:
-        logger.error("Unable to reach the Kubernetes cluster API server orchestration layers.")
+        logger.error("kubectl was not found in PATH")
         return False
 
-def deploy_manifests(manifest_paths: List[str], dry_run: bool = False) -> bool:
-    """Applies authentic Kubernetes manifest configurations directly to the system cluster with a dry-run validation gate."""
+    try:
+        subprocess.run(
+            [kubectl_path, "cluster-info"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=30,
+        )
+
+        logger.info("Kubernetes cluster connection verified")
+        return True
+
+    except (subprocess.SubprocessError, OSError):
+        logger.exception("Kubernetes cluster verification failed")
+        return False
+
+
+def deploy_manifests(
+    manifest_paths: Sequence[str],
+    dry_run: bool = False,
+) -> bool:
+    """Validate and optionally apply Kubernetes manifests."""
+
+    if not manifest_paths:
+        logger.error("No Kubernetes manifests were provided")
+        return False
+
+    kubectl_path = shutil.which("kubectl")
+
+    if not kubectl_path:
+        logger.error("kubectl was not found in PATH")
+        return False
+
     if not check_kubernetes_cluster():
         return False
-          
+
     for path in manifest_paths:
-        logger.info(f"Validating manifest via client dry-run: {path}")
         try:
-            dry_run_cmd = ["kubectl", "apply", "--dry-run=client", "-f", path]
-            subprocess.run(dry_run_cmd, check=True, capture_output=True, text=True)
-            logger.info(f"Dry-run validation passed for manifest: {path}")
-        except subprocess.SubprocessError as e:
-            logger.error(f"Dry-run validation failed on file path '{path}': {e.stderr if hasattr(e, 'stderr') else str(e)}")
+            subprocess.run(
+                [
+                    kubectl_path,
+                    "apply",
+                    "--dry-run=client",
+                    "-f",
+                    path,
+                ],
+                capture_output=True,
+                text=True,
+                check=True,
+                timeout=60,
+            )
+
+            logger.info(
+                "Manifest validation passed",
+                extra={"manifest": path},
+            )
+
+            if dry_run:
+                continue
+
+            subprocess.run(
+                [kubectl_path, "apply", "-f", path],
+                capture_output=True,
+                text=True,
+                check=True,
+                timeout=120,
+            )
+
+            logger.info(
+                "Manifest applied successfully",
+                extra={"manifest": path},
+            )
+
+        except (subprocess.SubprocessError, OSError):
+            logger.exception(
+                "Manifest deployment failed",
+                extra={"manifest": path},
+            )
             return False
 
-        if dry_run:
-            logger.info(f"Dry-run mode enabled. Skipping actual apply for: {path}")
-            continue
-
-        logger.info(f"Applying operational manifest payload: {path}")
-        try:
-            subprocess.run(["kubectl", "apply", "-f", path], check=True)
-        except subprocess.SubprocessError as e:
-            logger.error(f"Manifest processing abort generated on file path '{path}': {str(e)}")
-            return False
     return True
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "--verify":
