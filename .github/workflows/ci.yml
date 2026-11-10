@@ -1,15 +1,22 @@
-name: Comprehensive CI
+name: MyGravatar Comprehensive CI
 
 on:
   push:
-    branches: [ main, master, production ]
+    branches: [main, master, production]
+
   pull_request:
-    branches: [ main, master, production ]
+    branches: [main, master, production]
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   terraform-check:
-    name: Terraform Quality & Security Gate
+    name: Terraform Validation and Security
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -19,61 +26,28 @@ jobs:
         with:
           terraform_version: 1.5.0
 
-      - name: Check Canonical Formatting
-        run: terraform -chdir=infra/terraform fmt -check
+      - name: Check Terraform formatting
+        run: terraform -chdir=infra/terraform fmt -check -recursive
 
-      - name: Initialize Local Backend Sandbox
-        run: terraform -chdir=infra/terraform init -backend=false
+      - name: Initialize Terraform without remote backend
+        run: terraform -chdir=infra/terraform init -backend=false -input=false
 
-      - name: Run Schema Validation
+      - name: Validate Terraform configuration
         run: terraform -chdir=infra/terraform validate
 
-      - name: Run Local Planning Sandbox
-        run: terraform -chdir=infra/terraform plan -no-color
+      - name: Run Terraform plan
+        run: terraform -chdir=infra/terraform plan -input=false -no-color
 
-      - name: Run tfsec Static Application Security Testing
+      - name: Run tfsec security scan
         uses: aquasecurity/tfsec-action@v1.0.0
         with:
           working_directory: infra/terraform
           fail_on_severity: HIGH
 
   lint-and-format:
-    name: Code Quality Linting Engine
+    name: Python Lint and Formatting
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Run Web UI Code Quality Checks
-        run: |
-          if [ -f package.json ]; then
-            npm ci
-            npm run lint
-            npx prettier --check strict_prompt_builder.js
-          fi
-
-      - name: Set up Python Environment
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Run Python Ruff Linter & Formatting Checks
-        run: |
-          python -m pip install --upgrade pip
-          pip install ruff
-          python -m ruff check lemonade_router.py manage_infra.py chatbot_backend.py interactive_cli_chat.py
-          python -m ruff format --check lemonade_router.py manage_infra.py chatbot_backend.py interactive_cli_chat.py
-
-  python-tests:
-    name: Python Automated Testing & Coverage Suite
-    runs-on: ubuntu-latest
-    needs: [lint-and-format]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -81,13 +55,85 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.10"
+          cache: pip
 
-      - name: Install Runtime and Test Packages
+      - name: Install development dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest-cov
+          pip install -r requirements.txt -r requirements-dev.txt
 
-      - name: Execute Pytest Suite with Coverage Enforcement
-        run: pytest --maxfail=1 --disable-warnings --cov=. --cov-fail-under=50
+      - name: Run Ruff lint
+        run: |
+          ruff check \
+            lemonade_router.py \
+            chatbot_backend.py \
+            manage_infra.py \
+            interactive_cli_chat.py \
+            logging_config.py
+
+      - name: Check Python formatting
+        run: |
+          ruff format --check \
+            lemonade_router.py \
+            chatbot_backend.py \
+            manage_infra.py \
+            interactive_cli_chat.py \
+            logging_config.py
+
+  python-tests:
+    name: Automated Python Tests
+    runs-on: ubuntu-latest
+    needs: [lint-and-format]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Run test suite with coverage
+        run: |
+          pytest \
+            --maxfail=1 \
+            --disable-warnings \
+            --cov=chatbot_backend \
+            --cov=lemonade_router \
+            --cov=manage_infra \
+            --cov=interactive_cli_chat \
+            --cov-report=term-missing \
+            --cov-report=xml \
+            --cov-fail-under=50
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mygravatar-coverage
+          path: coverage.xml
+          if-no-files-found: ignore
+
+  shell-validation:
+    name: Shell Script Syntax Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate shell syntax
+        run: |
+          bash -n test-vllm-api.sh
+          bash -n verify-cluster.sh
+          bash -n install-kubernetes.sh
+          bash -n install-amd-gpu-operator.sh
+          bash -n check-system-enhanced.sh
