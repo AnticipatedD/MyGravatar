@@ -1,13 +1,18 @@
-import pytest
+import sys
+from pathlib import Path
 from unittest.mock import MagicMock
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 
 @pytest.fixture
 def setup_test_env(monkeypatch):
     monkeypatch.setenv("ROCM_API_KEY", "test-key")
-    monkeypatch.setenv(
-        "ROCM_ENGINE_URL", "http://localhost:8000/v1"
-    )
+    monkeypatch.setenv("ROCM_ENGINE_URL", "http://localhost:8000/v1")
     monkeypatch.setenv("ROCM_MODEL_NAME", "test-model")
 
 

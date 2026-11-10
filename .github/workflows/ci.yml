@@ -75,6 +75,8 @@ jobs:
     name: Automated Python Tests
     runs-on: ubuntu-latest
     needs: [lint-and-format]
+    env:
+      PYTHONPATH: ${{ github.workspace }}
 
     steps:
       - name: Checkout repository
