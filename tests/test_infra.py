@@ -1,29 +1,27 @@
-import pytest
-from unittest.mock import MagicMock, patch
+from pathlib import Path
 
-with patch('pykube.KubeConfig.from_file', lambda *args, **kwargs: MagicMock()):
-    import pykube
 
-def test_kubernetes_cluster_manifest_conditions():
-    """Validates real deployment orchestration environments parameters using state tracking libraries."""
-    mock_api = MagicMock()
-    
-    # Build simulated live infrastructure node allocations matrix returns
-    mock_node_01 = MagicMock(spec=pykube.Node)
-    mock_node_01.obj = {
-        "metadata": {"name": "mi300x-node-01"},
-        "status": {
-            "conditions": [{"type": "Ready", "status": "True"}],
-            "allocatable": {"://amd.com": "8"}
-        }
-    }
-    
-    # Query logic mapping routines tracking matching entities arrays
-    with patch('pykube.Node.objects') as mock_objects:
-        mock_objects.return_value.filter.return_value = [mock_node_01]
-        
-        nodes = pykube.Node.objects(mock_api).filter(namespace="default")
-        assert len(nodes) == 1
-        assert nodes[0].obj["metadata"]["name"] == "mi300x-node-01"
-        assert nodes[0].obj["status"]["allocatable"]["://amd.com"] == "8"
-        assert nodes[0].obj["status"]["conditions"][0]["status"] == "True"
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_vllm_manifest_exists():
+    manifest = ROOT / "manifests" / "vllm-deployment.yaml"
+
+    assert manifest.is_file()
+    assert manifest.stat().st_size > 0
+
+
+def test_vllm_manifest_contains_deployment():
+    content = (
+        ROOT / "manifests" / "vllm-deployment.yaml"
+    ).read_text(encoding="utf-8")
+
+    assert "kind: Deployment" in content
+    assert "vllm-qwen3-coder" in content
+
+
+def test_model_storage_manifest_exists():
+    manifest = ROOT / "manifests" / "model-storage.yaml"
+
+    assert manifest.is_file()
+    assert manifest.stat().st_size > 0
