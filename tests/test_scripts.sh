@@ -23,3 +23,13 @@ for script in "${SCRIPTS[@]}"; do
 done
 
 echo "All shell syntax checks passed."
+simplify the CI shell-validation job to:
+  shell-validation:
+    name: Shell Script Syntax Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate shell scripts
+        run: bash tests/test_scripts.sh
