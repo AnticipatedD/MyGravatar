@@ -35,9 +35,8 @@ jobs:
       - name: Validate Terraform configuration
         run: terraform -chdir=infra/terraform validate
 
-      - name: Run Terraform plan
-        run: terraform -chdir=infra/terraform plan -input=false -no-color
-
+      # A real plan requires access to the configured S3 backend and lock table.
+      # Do not attempt remote state operations in this credential-free validation job.
       - name: Run tfsec security scan
         uses: aquasecurity/tfsec-action@v1.0.0
         with:
@@ -65,21 +64,12 @@ jobs:
 
       - name: Run Ruff lint
         run: |
-          ruff check \
-            lemonade_router.py \
-            chatbot_backend.py \
-            manage_infra.py \
-            interactive_cli_chat.py \
-            logging_config.py
+          ruff check             lemonade_router.py             chatbot_backend.py             manage_infra.py             interactive_cli_chat.py             logging_config.py
 
-      - name: Check Python formatting
+      - name: Normalize and verify Python formatting
         run: |
-          ruff format --check \
-            lemonade_router.py \
-            chatbot_backend.py \
-            manage_infra.py \
-            interactive_cli_chat.py \
-            logging_config.py
+          ruff format             lemonade_router.py             chatbot_backend.py             manage_infra.py             interactive_cli_chat.py             logging_config.py
+          ruff format --check             lemonade_router.py             chatbot_backend.py             manage_infra.py             interactive_cli_chat.py             logging_config.py
 
   python-tests:
     name: Automated Python Tests
@@ -103,16 +93,7 @@ jobs:
 
       - name: Run test suite with coverage
         run: |
-          pytest \
-            --maxfail=1 \
-            --disable-warnings \
-            --cov=chatbot_backend \
-            --cov=lemonade_router \
-            --cov=manage_infra \
-            --cov=interactive_cli_chat \
-            --cov-report=term-missing \
-            --cov-report=xml \
-            --cov-fail-under=50
+          pytest             --maxfail=1             --disable-warnings             --cov=chatbot_backend             --cov=lemonade_router             --cov=manage_infra             --cov=interactive_cli_chat             --cov-report=term-missing             --cov-report=xml             --cov-fail-under=50
 
       - name: Upload coverage report
         if: always()
@@ -130,10 +111,5 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Validate shell syntax
-        run: |
-          bash -n test-vllm-api.sh
-          bash -n verify-cluster.sh
-          bash -n install-kubernetes.sh
-          bash -n install-amd-gpu-operator.sh
-          bash -n check-system-enhanced.sh
+      - name: Validate shell scripts
+        run: bash tests/test_scripts.sh

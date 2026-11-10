@@ -1,14 +1,19 @@
-#!/bin/bash
-# =====================================================================
-# AMD INSTINCT™ CLUSTER ENVIRONMENT VERIFICATION ENGINE
-# =====================================================================
+#!/usr/bin/env bash
+# ============================================================================
+# AMD INSTINCT(TM) CLUSTER ENVIRONMENT VERIFICATION DEMONSTRATION
+# ============================================================================
+
 BLUE='\e[34m'
 GREEN='\e[32m'
-YELLOW='\e[33m'
 NC='\e[0m'
 
-log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
-log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
+log_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+log_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
 
 clear
 echo "=========================================================="
@@ -28,9 +33,9 @@ echo ""
 
 log_info "Running command: kubectl get nodes --show-labels | grep amd"
 echo -e "\n\e[32m7-gpu-mi300x-1-192gb-devcloud-atli\e[0m  Ready  control-plane  v1.31.0"
-echo -e "Labels: \e[://33mamd.com\e[0m, feature.node.kubernetes.io/pci-1200_1002.present=true"
+echo -e "Labels: \e[33mamd.com\e[0m, feature.node.kubernetes.io/pci-1200_1002.present=true"
 echo ""
 
 echo "=========================================================="
-log_success "   AMD GPU DISCOVERY COMPLIANCE AUDIT PASSED!"
+log_success "AMD GPU discovery demonstration completed."
 echo "=========================================================="

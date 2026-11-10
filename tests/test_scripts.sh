@@ -13,23 +13,15 @@ SCRIPTS=(
 )
 
 for script in "${SCRIPTS[@]}"; do
-    if [[ ! -f "$ROOT_DIR/$script" ]]; then
-        echo "[FAIL] Missing script: $script"
+    script_path="$ROOT_DIR/$script"
+
+    if [[ ! -f "$script_path" ]]; then
+        printf '[FAIL] Missing script: %s\n' "$script"
         exit 1
     fi
 
-    bash -n "$ROOT_DIR/$script"
-    echo "[PASS] Shell syntax: $script"
+    bash -n "$script_path"
+    printf '[PASS] Shell syntax: %s\n' "$script"
 done
 
 echo "All shell syntax checks passed."
-simplify the CI shell-validation job to:
-  shell-validation:
-    name: Shell Script Syntax Validation
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Validate shell scripts
-        run: bash tests/test_scripts.sh
