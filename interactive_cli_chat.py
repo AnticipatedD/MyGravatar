@@ -1,39 +1,63 @@
-from chatbot_backend import create_initial_conversation, get_sampling_params, generate_response
+from collections.abc import Callable
+from typing import Any
 
-def run_cli_bot():
-    print("\n--- Starting your Custom Chatbot Loop ---")
-    print("Type 'exit' or 'quit' at any point to end the session.\n")
-    
-    # Initialize stateful conversation tracker
-    conversation = create_initial_conversation()
-    
-    # Setup generation boundaries
-    sampling_params = get_sampling_params(temperature=0.7, max_tokens=200, top_p=0.9)
-    
+from chatbot_backend import ChatbotBackendManager
+from lemonade_router import LemonadeRouterBuilder
+
+
+def run_cli_bot(
+    backend: ChatbotBackendManager | None = None,
+    client: Any | None = None,
+    input_fn: Callable[[str], str] = input,
+    output_fn: Callable[[str], None] = print,
+) -> None:
+    """Run an interactive conversation with the configured inference engine."""
+
+    manager = backend or ChatbotBackendManager()
+
+    if client is None:
+        client = LemonadeRouterBuilder().client
+
+    conversation: list[dict[str, str]] | None = None
+
+    output_fn("\n--- MyGravatar Interactive Chat ---")
+    output_fn("Type 'exit' or 'quit' to end the session.\n")
+
     while True:
-        user_input = input("You: ")
-        if user_input.lower().strip() in ["exit", "quit"]:
-            print("Goodbye!")
+        try:
+            user_input = input_fn("You: ")
+        except (EOFError, KeyboardInterrupt):
+            output_fn("\nGoodbye!")
             break
-            
+
+        if user_input.strip().lower() in {"exit", "quit"}:
+            output_fn("Goodbye!")
+            break
+
         if not user_input.strip():
             continue
-            
-        # 1. Append user statement to history tracking
-        conversation.append({"role": "user", "content": user_input})
-        
-        # 2. Run Inference on backend cluster
+
         try:
-            bot_reply = generate_response(conversation, sampling_params)
-            
-            # 3. Print structural output answer
-            print(f"Bot: {bot_reply}\n")
-            
-            # 4. Save Bot feedback to sustain state logic context
-            conversation.append({"role": "assistant", "content": bot_reply})
-            
-        except Exception as e:
-            print(f"An inference error occurred: {e}")
+            if conversation is None:
+                conversation = manager.create_initial_conversation(
+                    user_input.strip()
+                )
+            else:
+                conversation.append(
+                    {"role": "user", "content": user_input.strip()}
+                )
+
+            response = manager.generate_response(client, conversation)
+
+            output_fn(f"Bot: {response}\n")
+
+            conversation.append(
+                {"role": "assistant", "content": response}
+            )
+
+        except Exception as error:
+            output_fn(f"An inference error occurred: {error}")
+
 
 if __name__ == "__main__":
     run_cli_bot()
